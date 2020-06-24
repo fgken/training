@@ -139,7 +139,6 @@ main(void)
         int running_handles;
 
         fprintf(stderr, "TRACE: curl_multi_poll start\n");
-        extra_fds[0].revents = 0; // XXX FIXME XXX
         mc = curl_multi_poll(multi_handle, extra_fds, 1, 3000, &numfds);
         if (mc != CURLM_OK) {
             fprintf(stderr, "Failed to curl_multi_poll: %s\n",
@@ -147,6 +146,14 @@ main(void)
             // goto end;
         }
         fprintf(stderr, "TRACE: curl_multi_poll end: numfds = %d\n", numfds);
+        if (numfds == 0) {
+            /*
+             * XXX curl_multi_poll don't clear revents of extra_fds when
+             * numfds == 0.
+             * must not check revents if numfds == 0.
+             */
+            continue;
+        }
         fprintf(stderr, "TRACE: curl_multi_perform start\n");
         mc = curl_multi_perform(multi_handle, &running_handles);
         if (mc != CURLM_OK) {
